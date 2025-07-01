@@ -1,8 +1,14 @@
 
 import { useState } from "react";
-import { Home } from "lucide-react";
+import { Home, LogOut } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
-const Header = () => {
+interface HeaderProps {
+  username?: string;
+  onLogout?: () => void;
+}
+
+const Header = ({ username, onLogout }: HeaderProps) => {
   return (
     <header className="bg-primary text-white shadow-lg">
       <div className="container mx-auto px-4 py-4">
@@ -17,14 +23,34 @@ const Header = () => {
             </div>
           </div>
           
-          <div className="hidden md:flex items-center gap-4">
-            <div className="text-right">
-              <p className="text-sm text-white/80">Bem-vindo de volta!</p>
-              <p className="font-semibold">Usuário</p>
+          {username && (
+            <div className="hidden md:flex items-center gap-4">
+              <div className="text-right">
+                <p className="text-sm text-white/80">Bem-vindo de volta!</p>
+                <p className="font-semibold">{username}</p>
+              </div>
+              <div className="w-10 h-10 bg-secondary rounded-full flex items-center justify-center">
+                <span className="text-sm font-bold">{username.charAt(0).toUpperCase()}</span>
+              </div>
+              {onLogout && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={onLogout}
+                  className="text-white hover:bg-white/10"
+                >
+                  <LogOut className="w-4 h-4" />
+                </Button>
+              )}
             </div>
-            <div className="w-10 h-10 bg-secondary rounded-full flex items-center justify-center">
-              <span className="text-sm font-bold">U</span>
-            </div>
+          )}
+        </div>
+        
+        {/* Footer com direitos reservados e frase */}
+        <div className="mt-4 pt-3 border-t border-white/20">
+          <div className="flex flex-col md:flex-row justify-between items-center text-xs text-white/60">
+            <p>© 2024 Lovable Home Organizer. Todos os direitos reservados.</p>
+            <p className="italic mt-1 md:mt-0">"O verdadeiro Deus habita dentro de nós"</p>
           </div>
         </div>
       </div>

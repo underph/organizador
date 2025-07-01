@@ -1,13 +1,16 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Header from "@/components/Header";
 import ItemCard from "@/components/ItemCard";
 import AddItemModal from "@/components/AddItemModal";
+import LoginForm from "@/components/LoginForm";
 import { Item } from "@/types/Item";
 
 const Index = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUser, setCurrentUser] = useState<string>("");
   const [items, setItems] = useState<Item[]>([
     {
       id: "1",
@@ -31,6 +34,27 @@ const Index = () => {
   
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
+  // Verificar se já está logado no localStorage
+  useEffect(() => {
+    const savedUser = localStorage.getItem("currentUser");
+    if (savedUser) {
+      setCurrentUser(savedUser);
+      setIsAuthenticated(true);
+    }
+  }, []);
+
+  const handleLogin = (username: string) => {
+    setCurrentUser(username);
+    setIsAuthenticated(true);
+    localStorage.setItem("currentUser", username);
+  };
+
+  const handleLogout = () => {
+    setCurrentUser("");
+    setIsAuthenticated(false);
+    localStorage.removeItem("currentUser");
+  };
+
   const handleAddItem = (newItem: Omit<Item, "id" | "createdAt">) => {
     const item: Item = {
       ...newItem,
@@ -49,13 +73,18 @@ const Index = () => {
     setItems(items.filter(item => item.id !== itemId));
   };
 
+  // Se não estiver autenticado, mostrar tela de login
+  if (!isAuthenticated) {
+    return <LoginForm onLogin={handleLogin} />;
+  }
+
   const totalValue = items.reduce((sum, item) => sum + item.price, 0);
   const totalSaved = items.reduce((sum, item) => sum + item.amountSaved, 0);
   const progressPercentage = totalValue > 0 ? (totalSaved / totalValue) * 100 : 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <Header />
+      <Header username={currentUser} onLogout={handleLogout} />
       
       <main className="container mx-auto px-4 py-8">
         {/* Dashboard Summary */}
