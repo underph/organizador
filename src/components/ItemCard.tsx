@@ -1,22 +1,25 @@
 
 import { useState } from "react";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, DollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import EditItemModal from "./EditItemModal";
+import AddEntryModal from "./AddEntryModal";
 import { Item } from "@/types/Item";
 
 interface ItemCardProps {
   item: Item;
   onUpdate: (item: Item) => void;
   onDelete: (itemId: string) => void;
+  onAddEntry: (itemId: string, amount: number, description?: string) => void;
 }
 
-const ItemCard = ({ item, onUpdate, onDelete }: ItemCardProps) => {
+const ItemCard = ({ item, onUpdate, onDelete, onAddEntry }: ItemCardProps) => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isEntryModalOpen, setIsEntryModalOpen] = useState(false);
   
-  const progressPercentage = (item.amountSaved / item.price) * 100;
-  const remainingAmount = item.price - item.amountSaved;
+  const progressPercentage = (item.amount_saved / item.price) * 100;
+  const remainingAmount = item.price - item.amount_saved;
   
   const handleDelete = () => {
     if (window.confirm(`Tem certeza que deseja excluir "${item.name}"?`)) {
@@ -24,12 +27,16 @@ const ItemCard = ({ item, onUpdate, onDelete }: ItemCardProps) => {
     }
   };
 
+  const handleAddEntry = (amount: number, description?: string) => {
+    onAddEntry(item.id, amount, description);
+  };
+
   return (
     <>
       <Card className="card-hover overflow-hidden bg-white border border-gray-200">
         <div className="aspect-square overflow-hidden">
           <img 
-            src={item.imageUrl} 
+            src={item.image_url} 
             alt={item.name}
             className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
           />
@@ -57,7 +64,7 @@ const ItemCard = ({ item, onUpdate, onDelete }: ItemCardProps) => {
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium text-muted-foreground">Arrecadado:</span>
               <span className="font-semibold text-secondary">
-                R$ {item.amountSaved.toLocaleString()}
+                R$ {item.amount_saved.toLocaleString()}
               </span>
             </div>
             
@@ -85,8 +92,17 @@ const ItemCard = ({ item, onUpdate, onDelete }: ItemCardProps) => {
               </p>
             </div>
             
+            {/* Botão de entrada */}
+            <Button 
+              className="w-full bg-green-600 hover:bg-green-700 text-white"
+              onClick={() => setIsEntryModalOpen(true)}
+            >
+              <DollarSign className="w-4 h-4 mr-1" />
+              Adicionar Entrada
+            </Button>
+            
             {/* Botões de ação */}
-            <div className="flex gap-2 pt-2">
+            <div className="flex gap-2">
               <Button 
                 variant="outline" 
                 size="sm" 
@@ -116,6 +132,13 @@ const ItemCard = ({ item, onUpdate, onDelete }: ItemCardProps) => {
         onClose={() => setIsEditModalOpen(false)}
         onUpdate={onUpdate}
         item={item}
+      />
+
+      <AddEntryModal
+        isOpen={isEntryModalOpen}
+        onClose={() => setIsEntryModalOpen(false)}
+        onAdd={handleAddEntry}
+        itemName={item.name}
       />
     </>
   );

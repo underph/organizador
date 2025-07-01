@@ -1,6 +1,5 @@
 
 import { useState } from "react";
-import { X, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,7 +10,7 @@ import { Item } from "@/types/Item";
 interface AddItemModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (item: Omit<Item, "id" | "createdAt">) => void;
+  onAdd: (item: Omit<Item, "id" | "created_at" | "updated_at">) => void;
 }
 
 const AddItemModal = ({ isOpen, onClose, onAdd }: AddItemModalProps) => {
@@ -19,27 +18,27 @@ const AddItemModal = ({ isOpen, onClose, onAdd }: AddItemModalProps) => {
     name: "",
     description: "",
     price: "",
-    amountSaved: "",
-    imageUrl: ""
+    amount_saved: "",
+    image_url: ""
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name || !formData.price || !formData.imageUrl) {
+    if (!formData.name || !formData.price || !formData.image_url) {
       alert("Por favor, preencha todos os campos obrigatórios.");
       return;
     }
 
     const price = parseFloat(formData.price);
-    const amountSaved = parseFloat(formData.amountSaved) || 0;
+    const amount_saved = parseFloat(formData.amount_saved) || 0;
 
     if (price <= 0) {
       alert("O preço deve ser maior que zero.");
       return;
     }
 
-    if (amountSaved < 0) {
+    if (amount_saved < 0) {
       alert("O valor arrecadado não pode ser negativo.");
       return;
     }
@@ -48,8 +47,8 @@ const AddItemModal = ({ isOpen, onClose, onAdd }: AddItemModalProps) => {
       name: formData.name,
       description: formData.description,
       price: price,
-      amountSaved: amountSaved,
-      imageUrl: formData.imageUrl
+      amount_saved: amount_saved,
+      image_url: formData.image_url
     });
 
     // Reset form
@@ -57,8 +56,8 @@ const AddItemModal = ({ isOpen, onClose, onAdd }: AddItemModalProps) => {
       name: "",
       description: "",
       price: "",
-      amountSaved: "",
-      imageUrl: ""
+      amount_saved: "",
+      image_url: ""
     });
   };
 
@@ -107,20 +106,20 @@ const AddItemModal = ({ isOpen, onClose, onAdd }: AddItemModalProps) => {
 
           {/* URL da Imagem */}
           <div className="space-y-2">
-            <Label htmlFor="imageUrl" className="text-sm font-medium">
+            <Label htmlFor="image_url" className="text-sm font-medium">
               URL da Imagem *
             </Label>
             <Input
-              id="imageUrl"
-              value={formData.imageUrl}
-              onChange={(e) => handleChange("imageUrl", e.target.value)}
+              id="image_url"
+              value={formData.image_url}
+              onChange={(e) => handleChange("image_url", e.target.value)}
               placeholder="https://exemplo.com/imagem.jpg"
               className="border-gray-300 focus:border-secondary"
             />
-            {formData.imageUrl && (
+            {formData.image_url && (
               <div className="mt-2">
                 <img 
-                  src={formData.imageUrl} 
+                  src={formData.image_url} 
                   alt="Preview"
                   className="w-full h-32 object-cover rounded border"
                   onError={(e) => {
@@ -151,16 +150,16 @@ const AddItemModal = ({ isOpen, onClose, onAdd }: AddItemModalProps) => {
 
           {/* Valor Arrecadado */}
           <div className="space-y-2">
-            <Label htmlFor="amountSaved" className="text-sm font-medium">
+            <Label htmlFor="amount_saved" className="text-sm font-medium">
               Valor Já Arrecadado (R$)
             </Label>
             <Input
-              id="amountSaved"
+              id="amount_saved"
               type="number"
               step="0.01"
               min="0"
-              value={formData.amountSaved}
-              onChange={(e) => handleChange("amountSaved", e.target.value)}
+              value={formData.amount_saved}
+              onChange={(e) => handleChange("amount_saved", e.target.value)}
               placeholder="0,00"
               className="border-gray-300 focus:border-secondary"
             />

@@ -45,14 +45,6 @@ const Header = ({ username, onLogout }: HeaderProps) => {
             </div>
           )}
         </div>
-        
-        {/* Footer com direitos reservados e frase */}
-        <div className="mt-4 pt-3 border-t border-white/20">
-          <div className="flex flex-col md:flex-row justify-between items-center text-xs text-white/60">
-            <p>© 2024 Lovable Home Organizer. Todos os direitos reservados.</p>
-            <p className="italic mt-1 md:mt-0">"O verdadeiro Deus habita dentro de nós"</p>
-          </div>
-        </div>
       </div>
     </header>
   );

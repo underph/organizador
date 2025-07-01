@@ -19,8 +19,8 @@ const EditItemModal = ({ isOpen, onClose, onUpdate, item }: EditItemModalProps) 
     name: "",
     description: "",
     price: "",
-    amountSaved: "",
-    imageUrl: ""
+    amount_saved: "",
+    image_url: ""
   });
 
   useEffect(() => {
@@ -29,8 +29,8 @@ const EditItemModal = ({ isOpen, onClose, onUpdate, item }: EditItemModalProps) 
         name: item.name,
         description: item.description,
         price: item.price.toString(),
-        amountSaved: item.amountSaved.toString(),
-        imageUrl: item.imageUrl
+        amount_saved: item.amount_saved.toString(),
+        image_url: item.image_url
       });
     }
   }, [item]);
@@ -38,20 +38,20 @@ const EditItemModal = ({ isOpen, onClose, onUpdate, item }: EditItemModalProps) 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name || !formData.price || !formData.imageUrl) {
+    if (!formData.name || !formData.price || !formData.image_url) {
       alert("Por favor, preencha todos os campos obrigatórios.");
       return;
     }
 
     const price = parseFloat(formData.price);
-    const amountSaved = parseFloat(formData.amountSaved) || 0;
+    const amount_saved = parseFloat(formData.amount_saved) || 0;
 
     if (price <= 0) {
       alert("O preço deve ser maior que zero.");
       return;
     }
 
-    if (amountSaved < 0) {
+    if (amount_saved < 0) {
       alert("O valor arrecadado não pode ser negativo.");
       return;
     }
@@ -61,8 +61,8 @@ const EditItemModal = ({ isOpen, onClose, onUpdate, item }: EditItemModalProps) 
       name: formData.name,
       description: formData.description,
       price: price,
-      amountSaved: amountSaved,
-      imageUrl: formData.imageUrl
+      amount_saved: amount_saved,
+      image_url: formData.image_url
     });
 
     onClose();
@@ -113,20 +113,20 @@ const EditItemModal = ({ isOpen, onClose, onUpdate, item }: EditItemModalProps) 
 
           {/* URL da Imagem */}
           <div className="space-y-2">
-            <Label htmlFor="edit-imageUrl" className="text-sm font-medium">
+            <Label htmlFor="edit-image_url" className="text-sm font-medium">
               URL da Imagem *
             </Label>
             <Input
-              id="edit-imageUrl"
-              value={formData.imageUrl}
-              onChange={(e) => handleChange("imageUrl", e.target.value)}
+              id="edit-image_url"
+              value={formData.image_url}
+              onChange={(e) => handleChange("image_url", e.target.value)}
               placeholder="https://exemplo.com/imagem.jpg"
               className="border-gray-300 focus:border-secondary"
             />
-            {formData.imageUrl && (
+            {formData.image_url && (
               <div className="mt-2">
                 <img 
-                  src={formData.imageUrl} 
+                  src={formData.image_url} 
                   alt="Preview"
                   className="w-full h-32 object-cover rounded border"
                   onError={(e) => {
@@ -157,16 +157,16 @@ const EditItemModal = ({ isOpen, onClose, onUpdate, item }: EditItemModalProps) 
 
           {/* Valor Arrecadado */}
           <div className="space-y-2">
-            <Label htmlFor="edit-amountSaved" className="text-sm font-medium">
+            <Label htmlFor="edit-amount_saved" className="text-sm font-medium">
               Valor Já Arrecadado (R$)
             </Label>
             <Input
-              id="edit-amountSaved"
+              id="edit-amount_saved"
               type="number"
               step="0.01"
               min="0"
-              value={formData.amountSaved}
-              onChange={(e) => handleChange("amountSaved", e.target.value)}
+              value={formData.amount_saved}
+              onChange={(e) => handleChange("amount_saved", e.target.value)}
               placeholder="0,00"
               className="border-gray-300 focus:border-secondary"
             />
