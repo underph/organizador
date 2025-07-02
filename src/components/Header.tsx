@@ -1,5 +1,4 @@
 
-import { useState } from "react";
 import { Home, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -24,9 +23,9 @@ const Header = ({ username, onLogout }: HeaderProps) => {
           </div>
           
           {username && (
-            <div className="hidden md:flex items-center gap-4">
-              <div className="text-right">
-                <p className="text-sm text-white/80">Bem-vindo de volta!</p>
+            <div className="flex items-center gap-4">
+              <div className="hidden md:block text-right">
+                <p className="text-sm text-white/80">Bem-vindo!</p>
                 <p className="font-semibold">{username}</p>
               </div>
               <div className="w-10 h-10 bg-secondary rounded-full flex items-center justify-center">

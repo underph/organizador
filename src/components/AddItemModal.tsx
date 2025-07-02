@@ -2,9 +2,10 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import ImageUpload from "./ImageUpload";
 import { Item } from "@/types/Item";
 
 interface AddItemModalProps {
@@ -17,168 +18,72 @@ const AddItemModal = ({ isOpen, onClose, onAdd }: AddItemModalProps) => {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
-    price: "",
-    amount_saved: "",
+    price: 0,
+    amount_saved: 0,
     image_url: ""
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!formData.name || !formData.price || !formData.image_url) {
-      alert("Por favor, preencha todos os campos obrigatórios.");
-      return;
-    }
-
-    const price = parseFloat(formData.price);
-    const amount_saved = parseFloat(formData.amount_saved) || 0;
-
-    if (price <= 0) {
-      alert("O preço deve ser maior que zero.");
-      return;
-    }
-
-    if (amount_saved < 0) {
-      alert("O valor arrecadado não pode ser negativo.");
-      return;
-    }
-
-    onAdd({
-      name: formData.name,
-      description: formData.description,
-      price: price,
-      amount_saved: amount_saved,
-      image_url: formData.image_url
-    });
-
-    // Reset form
-    setFormData({
-      name: "",
-      description: "",
-      price: "",
-      amount_saved: "",
-      image_url: ""
-    });
+    onAdd(formData);
+    setFormData({ name: "", description: "", price: 0, amount_saved: 0, image_url: "" });
+    onClose();
   };
 
-  const handleChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  const handleImageUploaded = (url: string) => {
+    setFormData(prev => ({ ...prev, image_url: url }));
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold text-primary">
-            Adicionar Novo Item
-          </DialogTitle>
+          <DialogTitle>Adicionar Novo Item</DialogTitle>
         </DialogHeader>
-
+        
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Nome do Item */}
-          <div className="space-y-2">
-            <Label htmlFor="name" className="text-sm font-medium">
-              Nome do Item *
-            </Label>
+          <div>
+            <Label htmlFor="name">Nome do Item</Label>
             <Input
               id="name"
               value={formData.name}
-              onChange={(e) => handleChange("name", e.target.value)}
-              placeholder="Ex: Máquina de Café Espresso"
-              className="border-gray-300 focus:border-secondary"
+              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+              placeholder="Ex: Sofá novo"
+              required
             />
           </div>
-
-          {/* Descrição */}
-          <div className="space-y-2">
-            <Label htmlFor="description" className="text-sm font-medium">
-              Descrição
-            </Label>
+          
+          <div>
+            <Label htmlFor="description">Descrição</Label>
             <Textarea
               id="description"
               value={formData.description}
-              onChange={(e) => handleChange("description", e.target.value)}
-              placeholder="Breve descrição do item..."
-              className="border-gray-300 focus:border-secondary resize-none"
+              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+              placeholder="Descreva o item..."
               rows={3}
             />
           </div>
-
-          {/* URL da Imagem */}
-          <div className="space-y-2">
-            <Label htmlFor="image_url" className="text-sm font-medium">
-              URL da Imagem *
-            </Label>
-            <Input
-              id="image_url"
-              value={formData.image_url}
-              onChange={(e) => handleChange("image_url", e.target.value)}
-              placeholder="https://exemplo.com/imagem.jpg"
-              className="border-gray-300 focus:border-secondary"
-            />
-            {formData.image_url && (
-              <div className="mt-2">
-                <img 
-                  src={formData.image_url} 
-                  alt="Preview"
-                  className="w-full h-32 object-cover rounded border"
-                  onError={(e) => {
-                    const target = e.target as HTMLImageElement;
-                    target.style.display = 'none';
-                  }}
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Preço Total */}
-          <div className="space-y-2">
-            <Label htmlFor="price" className="text-sm font-medium">
-              Preço Total (R$) *
-            </Label>
+          
+          <div>
+            <Label htmlFor="price">Preço (R$)</Label>
             <Input
               id="price"
               type="number"
               step="0.01"
-              min="0"
               value={formData.price}
-              onChange={(e) => handleChange("price", e.target.value)}
+              onChange={(e) => setFormData(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
               placeholder="0,00"
-              className="border-gray-300 focus:border-secondary"
+              required
             />
           </div>
 
-          {/* Valor Arrecadado */}
-          <div className="space-y-2">
-            <Label htmlFor="amount_saved" className="text-sm font-medium">
-              Valor Já Arrecadado (R$)
-            </Label>
-            <Input
-              id="amount_saved"
-              type="number"
-              step="0.01"
-              min="0"
-              value={formData.amount_saved}
-              onChange={(e) => handleChange("amount_saved", e.target.value)}
-              placeholder="0,00"
-              className="border-gray-300 focus:border-secondary"
-            />
-          </div>
-
-          {/* Botões */}
-          <div className="flex gap-3 pt-4">
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={onClose}
-              className="flex-1"
-            >
+          <ImageUpload onImageUploaded={handleImageUploaded} />
+          
+          <div className="flex gap-2 pt-4">
+            <Button type="button" variant="outline" onClick={onClose} className="flex-1">
               Cancelar
             </Button>
-            <Button 
-              type="submit"
-              className="flex-1 bg-secondary hover:bg-secondary/90 text-white"
-            >
+            <Button type="submit" className="flex-1">
               Adicionar Item
             </Button>
           </div>

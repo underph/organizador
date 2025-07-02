@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Plus, ShoppingBag } from "lucide-react";
+import { Plus, ShoppingBag, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Header from "@/components/Header";
@@ -8,33 +8,45 @@ import Footer from "@/components/Footer";
 import ItemCard from "@/components/ItemCard";
 import AddItemModal from "@/components/AddItemModal";
 import ShoppingList from "@/components/ShoppingList";
-import LoginForm from "@/components/LoginForm";
+import FinancialControl from "@/components/FinancialControl";
+import Auth from "@/components/Auth";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import { Item } from "@/types/Item";
+import type { User, Session } from "@supabase/supabase-js";
 
 const Index = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [currentUser, setCurrentUser] = useState<string>("");
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [items, setItems] = useState<Item[]>([]);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
-  // Verificar se já está logado no localStorage
   useEffect(() => {
-    const savedUser = localStorage.getItem("currentUser");
-    if (savedUser) {
-      setCurrentUser(savedUser);
-      setIsAuthenticated(true);
-    }
-    setLoading(false);
+    // Configurar listener de autenticação
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          setTimeout(() => {
+            fetchItems();
+          }, 0);
+        }
+      }
+    );
+
+    // Verificar sessão existente
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
-
-  // Buscar itens quando autenticado
-  useEffect(() => {
-    if (isAuthenticated && (currentUser === "casa" || currentUser === "admin")) {
-      fetchItems();
-    }
-  }, [isAuthenticated, currentUser]);
 
   const fetchItems = async () => {
     try {
@@ -50,23 +62,33 @@ const Index = () => {
     }
   };
 
-  const handleLogin = (username: string) => {
-    setCurrentUser(username);
-    setIsAuthenticated(true);
-    localStorage.setItem("currentUser", username);
-  };
-
-  const handleLogout = () => {
-    setCurrentUser("");
-    setIsAuthenticated(false);
-    localStorage.removeItem("currentUser");
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      setUser(null);
+      setSession(null);
+      setItems([]);
+    } catch (error: any) {
+      toast({
+        title: "Erro ao fazer logout",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
   const handleAddItem = async (newItem: Omit<Item, "id" | "created_at" | "updated_at">) => {
     try {
+      if (!user) throw new Error('Usuário não autenticado');
+
       const { data, error } = await supabase
         .from('items')
-        .insert([newItem])
+        .insert([{
+          ...newItem,
+          user_id: user.id
+        }])
         .select()
         .single();
 
@@ -74,9 +96,17 @@ const Index = () => {
 
       setItems([data, ...items]);
       setIsAddModalOpen(false);
-    } catch (error) {
-      console.error('Erro ao adicionar item:', error);
-      alert('Erro ao adicionar item. Tente novamente.');
+      
+      toast({
+        title: "Item adicionado!",
+        description: "O item foi adicionado com sucesso.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erro ao adicionar item",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 
@@ -96,9 +126,17 @@ const Index = () => {
       if (error) throw error;
 
       setItems(items.map(item => item.id === updatedItem.id ? updatedItem : item));
-    } catch (error) {
-      console.error('Erro ao atualizar item:', error);
-      alert('Erro ao atualizar item. Tente novamente.');
+      
+      toast({
+        title: "Item atualizado!",
+        description: "As alterações foram salvas com sucesso.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erro ao atualizar item",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 
@@ -112,9 +150,17 @@ const Index = () => {
       if (error) throw error;
 
       setItems(items.filter(item => item.id !== itemId));
-    } catch (error) {
-      console.error('Erro ao deletar item:', error);
-      alert('Erro ao deletar item. Tente novamente.');
+      
+      toast({
+        title: "Item removido!",
+        description: "O item foi removido com sucesso.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erro ao deletar item",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 
@@ -147,24 +193,36 @@ const Index = () => {
         setItems(items.map(i => 
           i.id === itemId ? { ...i, amount_saved: newAmountSaved } : i
         ));
+        
+        toast({
+          title: "Entrada adicionada!",
+          description: `R$ ${amount.toFixed(2)} foi adicionado ao item.`,
+        });
       }
-    } catch (error) {
-      console.error('Erro ao adicionar entrada:', error);
-      alert('Erro ao adicionar entrada. Tente novamente.');
+    } catch (error: any) {
+      toast({
+        title: "Erro ao adicionar entrada",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 
   if (loading) {
-    return <div>Carregando...</div>;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Carregando...</p>
+        </div>
+      </div>
+    );
   }
 
   // Se não estiver autenticado, mostrar tela de login
-  if (!isAuthenticated) {
-    return <LoginForm onLogin={handleLogin} />;
+  if (!user || !session) {
+    return <Auth onAuthSuccess={() => setLoading(false)} />;
   }
-
-  // Verificar se é usuário autorizado para CRUD
-  const canManageItems = currentUser === "casa" || currentUser === "admin";
 
   const totalValue = items.reduce((sum, item) => sum + item.price, 0);
   const totalSaved = items.reduce((sum, item) => sum + item.amount_saved, 0);
@@ -172,15 +230,19 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col">
-      <Header username={currentUser} onLogout={handleLogout} />
+      <Header username={user.email || 'Usuário'} onLogout={handleLogout} />
       
       <main className="container mx-auto px-4 py-8 flex-1">
         <Tabs defaultValue="items" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-8">
+          <TabsList className="grid w-full grid-cols-3 mb-8">
             <TabsTrigger value="items">Meus Itens</TabsTrigger>
             <TabsTrigger value="shopping">
               <ShoppingBag className="w-4 h-4 mr-2" />
               Lista de Compras
+            </TabsTrigger>
+            <TabsTrigger value="financial">
+              <TrendingUp className="w-4 h-4 mr-2" />
+              Controle Financeiro
             </TabsTrigger>
           </TabsList>
 
@@ -224,18 +286,16 @@ const Index = () => {
             </div>
 
             {/* Header com botão de adicionar */}
-            {canManageItems && (
-              <div className="flex justify-between items-center animate-fade-in-up">
-                <h1 className="text-3xl font-bold text-primary">Meus Itens</h1>
-                <Button 
-                  onClick={() => setIsAddModalOpen(true)}
-                  className="bg-secondary hover:bg-secondary/90 text-white"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Adicionar Item
-                </Button>
-              </div>
-            )}
+            <div className="flex justify-between items-center animate-fade-in-up">
+              <h1 className="text-3xl font-bold text-primary">Meus Itens</h1>
+              <Button 
+                onClick={() => setIsAddModalOpen(true)}
+                className="bg-secondary hover:bg-secondary/90 text-white"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Adicionar Item
+              </Button>
+            </div>
 
             {/* Grid de Itens */}
             {items.length === 0 ? (
@@ -247,15 +307,13 @@ const Index = () => {
                   <p className="text-muted-foreground mb-4">
                     Comece adicionando seu primeiro item para organizar suas compras!
                   </p>
-                  {canManageItems && (
-                    <Button 
-                      onClick={() => setIsAddModalOpen(true)}
-                      className="bg-secondary hover:bg-secondary/90 text-white"
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Adicionar Primeiro Item
-                    </Button>
-                  )}
+                  <Button 
+                    onClick={() => setIsAddModalOpen(true)}
+                    className="bg-secondary hover:bg-secondary/90 text-white"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Adicionar Primeiro Item
+                  </Button>
                 </div>
               </div>
             ) : (
@@ -268,9 +326,9 @@ const Index = () => {
                   >
                     <ItemCard 
                       item={item} 
-                      onUpdate={canManageItems ? handleUpdateItem : () => {}}
-                      onDelete={canManageItems ? handleDeleteItem : () => {}}
-                      onAddEntry={canManageItems ? handleAddEntry : () => {}}
+                      onUpdate={handleUpdateItem}
+                      onDelete={handleDeleteItem}
+                      onAddEntry={handleAddEntry}
                     />
                   </div>
                 ))}
@@ -281,18 +339,20 @@ const Index = () => {
           <TabsContent value="shopping">
             <ShoppingList />
           </TabsContent>
+
+          <TabsContent value="financial">
+            <FinancialControl />
+          </TabsContent>
         </Tabs>
       </main>
 
       <Footer />
 
-      {canManageItems && (
-        <AddItemModal 
-          isOpen={isAddModalOpen}
-          onClose={() => setIsAddModalOpen(false)}
-          onAdd={handleAddItem}
-        />
-      )}
+      <AddItemModal 
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onAdd={handleAddItem}
+      />
     </div>
   );
 };

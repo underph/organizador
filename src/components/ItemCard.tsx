@@ -34,9 +34,9 @@ const ItemCard = ({ item, onUpdate, onDelete, onAddEntry }: ItemCardProps) => {
   return (
     <>
       <Card className="card-hover overflow-hidden bg-white border border-gray-200">
-        <div className="aspect-square overflow-hidden">
+        <div className="aspect-video overflow-hidden">
           <img 
-            src={item.image_url} 
+            src={item.image_url || '/placeholder.svg'} 
             alt={item.name}
             className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
           />

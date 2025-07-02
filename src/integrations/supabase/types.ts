@@ -9,6 +9,63 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      financial_settings: {
+        Row: {
+          cdi_rate: number | null
+          created_at: string
+          id: string
+          selic_rate: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cdi_rate?: number | null
+          created_at?: string
+          id?: string
+          selic_rate?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cdi_rate?: number | null
+          created_at?: string
+          id?: string
+          selic_rate?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      investments: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          name: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          name: string
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          name?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       item_entries: {
         Row: {
           amount: number
@@ -51,6 +108,7 @@ export type Database = {
           name: string
           price: number
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           amount_saved?: number
@@ -61,6 +119,7 @@ export type Database = {
           name: string
           price?: number
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           amount_saved?: number
@@ -70,6 +129,28 @@ export type Database = {
           image_url?: string | null
           name?: string
           price?: number
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
           updated_at?: string
         }
         Relationships: []
@@ -83,6 +164,7 @@ export type Database = {
           price: number | null
           quantity: number | null
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -92,6 +174,7 @@ export type Database = {
           price?: number | null
           quantity?: number | null
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -101,6 +184,7 @@ export type Database = {
           price?: number | null
           quantity?: number | null
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: []
       }
