@@ -35,7 +35,12 @@ const FinancialControl = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setInvestments(data || []);
+      // Cast the data to match our Investment type
+      const typedInvestments: Investment[] = (data || []).map(item => ({
+        ...item,
+        type: item.type as Investment['type']
+      }));
+      setInvestments(typedInvestments);
     } catch (error) {
       console.error('Erro ao buscar investimentos:', error);
     }
