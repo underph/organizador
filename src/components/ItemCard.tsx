@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Edit, Trash2, DollarSign } from "lucide-react";
+import { Edit, Trash2, DollarSign, Plus, Minus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import EditItemModal from "./EditItemModal";
@@ -11,15 +11,17 @@ interface ItemCardProps {
   item: Item;
   onUpdate: (item: Item) => void;
   onDelete: (itemId: string) => void;
-  onAddEntry: (itemId: string, amount: number, description?: string) => void;
+  onAddEntry: (itemId: string, amount: number, quantity: number, description?: string) => void;
+  onUpdateQuantity: (itemId: string, quantity: number) => void;
 }
 
-const ItemCard = ({ item, onUpdate, onDelete, onAddEntry }: ItemCardProps) => {
+const ItemCard = ({ item, onUpdate, onDelete, onAddEntry, onUpdateQuantity }: ItemCardProps) => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isEntryModalOpen, setIsEntryModalOpen] = useState(false);
   
-  const progressPercentage = (item.amount_saved / item.price) * 100;
-  const remainingAmount = item.price - item.amount_saved;
+  const totalPrice = item.price * item.quantity;
+  const progressPercentage = (item.amount_saved / totalPrice) * 100;
+  const remainingAmount = totalPrice - item.amount_saved;
   
   const handleDelete = () => {
     if (window.confirm(`Tem certeza que deseja excluir "${item.name}"?`)) {
@@ -28,7 +30,13 @@ const ItemCard = ({ item, onUpdate, onDelete, onAddEntry }: ItemCardProps) => {
   };
 
   const handleAddEntry = (amount: number, description?: string) => {
-    onAddEntry(item.id, amount, description);
+    onAddEntry(item.id, amount, 1, description);
+  };
+
+  const handleQuantityChange = (newQuantity: number) => {
+    if (newQuantity > 0) {
+      onUpdateQuantity(item.id, newQuantity);
+    }
   };
 
   return (
@@ -52,11 +60,46 @@ const ItemCard = ({ item, onUpdate, onDelete, onAddEntry }: ItemCardProps) => {
           </p>
           
           <div className="space-y-3">
-            {/* Preço */}
+            {/* Quantidade */}
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium text-muted-foreground">Quantidade:</span>
+              <div className="flex items-center gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleQuantityChange(item.quantity - 1)}
+                  disabled={item.quantity <= 1}
+                  className="w-8 h-8 p-0"
+                >
+                  <Minus className="w-3 h-3" />
+                </Button>
+                <span className="font-semibold text-lg min-w-[2rem] text-center">
+                  {item.quantity}
+                </span>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleQuantityChange(item.quantity + 1)}
+                  className="w-8 h-8 p-0"
+                >
+                  <Plus className="w-3 h-3" />
+                </Button>
+              </div>
+            </div>
+
+            {/* Preço unitário */}
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium text-muted-foreground">Preço Unitário:</span>
+              <span className="font-semibold text-secondary">
+                R$ {item.price.toLocaleString()}
+              </span>
+            </div>
+            
+            {/* Preço total */}
             <div className="flex justify-between items-center">
               <span className="text-sm font-medium text-muted-foreground">Preço Total:</span>
               <span className="font-bold text-lg text-primary">
-                R$ {item.price.toLocaleString()}
+                R$ {totalPrice.toLocaleString()}
               </span>
             </div>
             

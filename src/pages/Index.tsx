@@ -158,6 +158,7 @@ const Index = () => {
           name: updatedItem.name,
           description: updatedItem.description,
           price: updatedItem.price,
+          quantity: updatedItem.quantity,
           amount_saved: updatedItem.amount_saved,
           image_url: updatedItem.image_url
         })
@@ -204,7 +205,7 @@ const Index = () => {
     }
   };
 
-  const handleAddEntry = async (itemId: string, amount: number, description?: string) => {
+  const handleAddEntry = async (itemId: string, amount: number, quantity: number, description?: string) => {
     try {
       // Adicionar entrada na tabela de entradas
       const { error: entryError } = await supabase
@@ -212,6 +213,7 @@ const Index = () => {
         .insert([{
           item_id: itemId,
           amount: amount,
+          quantity: quantity,
           description: description
         }]);
 
@@ -242,6 +244,33 @@ const Index = () => {
     } catch (error: any) {
       toast({
         title: "Erro ao adicionar entrada",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUpdateQuantity = async (itemId: string, quantity: number) => {
+    try {
+      const { error } = await supabase
+        .from('items')
+        .update({ quantity: quantity })
+        .eq('id', itemId);
+
+      if (error) throw error;
+
+      // Atualizar estado local
+      setItems(items.map(i => 
+        i.id === itemId ? { ...i, quantity: quantity } : i
+      ));
+      
+      toast({
+        title: "Quantidade atualizada!",
+        description: `Quantidade alterada para ${quantity}.`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Erro ao atualizar quantidade",
         description: error.message,
         variant: "destructive",
       });
@@ -290,7 +319,7 @@ const Index = () => {
     );
   }
 
-  const totalValue = items.reduce((sum, item) => sum + item.price, 0);
+  const totalValue = items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   const totalSaved = items.reduce((sum, item) => sum + item.amount_saved, 0);
   const progressPercentage = totalValue > 0 ? (totalSaved / totalValue) * 100 : 0;
 
@@ -408,6 +437,7 @@ const Index = () => {
                       onUpdate={handleUpdateItem}
                       onDelete={handleDeleteItem}
                       onAddEntry={handleAddEntry}
+                      onUpdateQuantity={handleUpdateQuantity}
                     />
                   </div>
                 ))}

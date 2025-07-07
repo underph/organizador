@@ -4,6 +4,7 @@ export interface Item {
   name: string;
   description: string;
   price: number;
+  quantity: number;
   amount_saved: number;
   image_url: string;
   created_at: string;
@@ -14,6 +15,7 @@ export interface ItemEntry {
   id: string;
   item_id: string;
   amount: number;
+  quantity: number;
   description?: string;
   created_at: string;
 }

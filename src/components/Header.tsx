@@ -35,7 +35,7 @@ const Header = ({ username, userProfile, onLogout, onProfileClick, onAdminClick 
               <Home className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-lg md:text-xl font-bold">Lovable Home Organizer</h1>
+              <h1 className="text-lg md:text-xl font-bold">Organizador Financeiro</h1>
               <p className="text-white/80 text-xs md:text-sm">Seu controle doméstico inteligente</p>
             </div>
           </div>
