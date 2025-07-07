@@ -98,8 +98,7 @@ const ProfileSettings = ({ user, onClose }: ProfileSettingsProps) => {
           </Avatar>
           
           <ImageUpload 
-            onImageUpload={handleImageUpload}
-            folder="avatars"
+            onImageUploaded={handleImageUpload}
             currentImageUrl={avatarUrl}
           />
         </div>

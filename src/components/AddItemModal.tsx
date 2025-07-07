@@ -19,6 +19,7 @@ const AddItemModal = ({ isOpen, onClose, onAdd }: AddItemModalProps) => {
     name: "",
     description: "",
     price: 0,
+    quantity: 1,
     amount_saved: 0,
     image_url: ""
   });
@@ -26,7 +27,7 @@ const AddItemModal = ({ isOpen, onClose, onAdd }: AddItemModalProps) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onAdd(formData);
-    setFormData({ name: "", description: "", price: 0, amount_saved: 0, image_url: "" });
+    setFormData({ name: "", description: "", price: 0, quantity: 1, amount_saved: 0, image_url: "" });
     onClose();
   };
 
@@ -73,6 +74,19 @@ const AddItemModal = ({ isOpen, onClose, onAdd }: AddItemModalProps) => {
               value={formData.price}
               onChange={(e) => setFormData(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
               placeholder="0,00"
+              required
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="quantity">Quantidade</Label>
+            <Input
+              id="quantity"
+              type="number"
+              min="1"
+              value={formData.quantity}
+              onChange={(e) => setFormData(prev => ({ ...prev, quantity: parseInt(e.target.value) || 1 }))}
+              placeholder="1"
               required
             />
           </div>

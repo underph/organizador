@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Plus, ShoppingBag, TrendingUp, Settings, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -93,7 +94,14 @@ const Index = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setItems(data || []);
+      
+      // Garantir que todos os itens tenham a propriedade quantity
+      const itemsWithQuantity = (data || []).map(item => ({
+        ...item,
+        quantity: item.quantity || 1
+      }));
+      
+      setItems(itemsWithQuantity);
     } catch (error) {
       console.error('Erro ao buscar itens:', error);
     }
@@ -134,7 +142,8 @@ const Index = () => {
 
       if (error) throw error;
 
-      setItems([data, ...items]);
+      const itemWithQuantity = { ...data, quantity: data.quantity || 1 };
+      setItems([itemWithQuantity, ...items]);
       setIsAddModalOpen(false);
       
       toast({
