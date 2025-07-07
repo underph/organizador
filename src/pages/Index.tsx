@@ -1,14 +1,16 @@
-
 import { useState, useEffect } from "react";
-import { Plus, ShoppingBag, TrendingUp } from "lucide-react";
+import { Plus, ShoppingBag, TrendingUp, Settings, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ItemCard from "@/components/ItemCard";
 import AddItemModal from "@/components/AddItemModal";
 import ShoppingList from "@/components/ShoppingList";
 import FinancialControl from "@/components/FinancialControl";
+import AdminDashboard from "@/components/AdminDashboard";
+import ProfileSettings from "@/components/ProfileSettings";
 import Auth from "@/components/Auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -18,8 +20,12 @@ import type { User, Session } from "@supabase/supabase-js";
 const Index = () => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [userProfile, setUserProfile] = useState<any>(null);
   const [items, setItems] = useState<Item[]>([]);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [showAdminDashboard, setShowAdminDashboard] = useState(false);
+  const [activeTab, setActiveTab] = useState("items");
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
@@ -32,8 +38,12 @@ const Index = () => {
         
         if (session?.user) {
           setTimeout(() => {
+            fetchUserProfile(session.user.id);
             fetchItems();
           }, 0);
+        } else {
+          setUserProfile(null);
+          setItems([]);
         }
       }
     );
@@ -42,11 +52,38 @@ const Index = () => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+      if (session?.user) {
+        fetchUserProfile(session.user.id);
+      }
       setLoading(false);
     });
 
     return () => subscription.unsubscribe();
   }, []);
+
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('name, avatar_url, role, last_login_at')
+        .eq('id', userId)
+        .single();
+
+      if (error && error.code !== 'PGRST116') throw error;
+      
+      setUserProfile(data);
+
+      // Atualizar last_login_at
+      if (data) {
+        await supabase
+          .from('profiles')
+          .update({ last_login_at: new Date().toISOString() })
+          .eq('id', userId);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar perfil:', error);
+    }
+  };
 
   const fetchItems = async () => {
     try {
@@ -69,7 +106,10 @@ const Index = () => {
       
       setUser(null);
       setSession(null);
+      setUserProfile(null);
       setItems([]);
+      setShowAdminDashboard(false);
+      setActiveTab("items");
     } catch (error: any) {
       toast({
         title: "Erro ao fazer logout",
@@ -224,45 +264,79 @@ const Index = () => {
     return <Auth onAuthSuccess={() => setLoading(false)} />;
   }
 
+  // Se admin dashboard estiver ativo
+  if (showAdminDashboard) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col">
+        <Header 
+          username={user.email || 'Usuário'} 
+          userProfile={userProfile}
+          onLogout={handleLogout}
+          onProfileClick={() => setIsProfileModalOpen(true)}
+          onAdminClick={() => setShowAdminDashboard(false)}
+        />
+        <main className="flex-1">
+          <AdminDashboard />
+          <Button 
+            onClick={() => setShowAdminDashboard(false)}
+            className="fixed bottom-6 right-6 md:hidden"
+            size="lg"
+          >
+            Voltar
+          </Button>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   const totalValue = items.reduce((sum, item) => sum + item.price, 0);
   const totalSaved = items.reduce((sum, item) => sum + item.amount_saved, 0);
   const progressPercentage = totalValue > 0 ? (totalSaved / totalValue) * 100 : 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex flex-col">
-      <Header username={user.email || 'Usuário'} onLogout={handleLogout} />
+      <Header 
+        username={user.email || 'Usuário'} 
+        userProfile={userProfile}
+        onLogout={handleLogout}
+        onProfileClick={() => setIsProfileModalOpen(true)}
+        onAdminClick={userProfile?.role === 'admin' ? () => setShowAdminDashboard(true) : undefined}
+      />
       
-      <main className="container mx-auto px-4 py-8 flex-1">
-        <Tabs defaultValue="items" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-8">
-            <TabsTrigger value="items">Meus Itens</TabsTrigger>
-            <TabsTrigger value="shopping">
-              <ShoppingBag className="w-4 h-4 mr-2" />
-              Lista de Compras
+      <main className="container mx-auto px-4 py-6 md:py-8 flex-1">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-3 mb-6 md:mb-8">
+            <TabsTrigger value="items" className="text-xs sm:text-sm">
+              Meus Itens ({items.length})
             </TabsTrigger>
-            <TabsTrigger value="financial">
-              <TrendingUp className="w-4 h-4 mr-2" />
-              Controle Financeiro
+            <TabsTrigger value="shopping" className="text-xs sm:text-sm">
+              <ShoppingBag className="w-4 h-4 mr-1 md:mr-2" />
+              <span className="hidden sm:inline">Lista de</span> Compras
+            </TabsTrigger>
+            <TabsTrigger value="financial" className="text-xs sm:text-sm">
+              <TrendingUp className="w-4 h-4 mr-1 md:mr-2" />
+              <span className="hidden sm:inline">Controle</span> Financeiro
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="items" className="space-y-8">
+          <TabsContent value="items" className="space-y-6 md:space-y-8">
             {/* Dashboard Summary */}
             <div className="animate-fade-in-up">
-              <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200">
-                <h2 className="text-2xl font-bold text-primary mb-4">Resumo Financeiro</h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-white rounded-xl shadow-lg p-4 md:p-6 border border-gray-200">
+                <h2 className="text-xl md:text-2xl font-bold text-primary mb-4">Resumo Financeiro</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
                   <div className="text-center">
                     <p className="text-sm text-muted-foreground mb-1">Total de Itens</p>
-                    <p className="text-3xl font-bold text-primary">{items.length}</p>
+                    <p className="text-2xl md:text-3xl font-bold text-primary">{items.length}</p>
                   </div>
                   <div className="text-center">
                     <p className="text-sm text-muted-foreground mb-1">Valor Total</p>
-                    <p className="text-3xl font-bold text-primary">R$ {totalValue.toLocaleString()}</p>
+                    <p className="text-2xl md:text-3xl font-bold text-primary">R$ {totalValue.toLocaleString()}</p>
                   </div>
                   <div className="text-center">
                     <p className="text-sm text-muted-foreground mb-1">Valor Arrecadado</p>
-                    <p className="text-3xl font-bold text-secondary">R$ {totalSaved.toLocaleString()}</p>
+                    <p className="text-2xl md:text-3xl font-bold text-secondary">R$ {totalSaved.toLocaleString()}</p>
                   </div>
                 </div>
                 
@@ -286,11 +360,16 @@ const Index = () => {
             </div>
 
             {/* Header com botão de adicionar */}
-            <div className="flex justify-between items-center animate-fade-in-up">
-              <h1 className="text-3xl font-bold text-primary">Meus Itens</h1>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 animate-fade-in-up">
+              <div>
+                <h1 className="text-2xl md:text-3xl font-bold text-primary">Meus Itens</h1>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {items.length} {items.length === 1 ? 'item cadastrado' : 'itens cadastrados'}
+                </p>
+              </div>
               <Button 
                 onClick={() => setIsAddModalOpen(true)}
-                className="bg-secondary hover:bg-secondary/90 text-white"
+                className="bg-secondary hover:bg-secondary/90 text-white w-full sm:w-auto"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Adicionar Item
@@ -300,7 +379,7 @@ const Index = () => {
             {/* Grid de Itens */}
             {items.length === 0 ? (
               <div className="text-center py-12 animate-scale-in">
-                <div className="bg-white rounded-xl shadow-lg p-8 border border-gray-200">
+                <div className="bg-white rounded-xl shadow-lg p-6 md:p-8 border border-gray-200">
                   <h3 className="text-xl font-semibold text-muted-foreground mb-2">
                     Nenhum item cadastrado
                   </h3>
@@ -317,7 +396,7 @@ const Index = () => {
                 </div>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                 {items.map((item, index) => (
                   <div 
                     key={item.id} 
@@ -348,11 +427,29 @@ const Index = () => {
 
       <Footer />
 
+      {/* Modais */}
       <AddItemModal 
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onAdd={handleAddItem}
       />
+
+      <Dialog open={isProfileModalOpen} onOpenChange={setIsProfileModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Configurações de Perfil</DialogTitle>
+          </DialogHeader>
+          {user && (
+            <ProfileSettings 
+              user={user} 
+              onClose={() => {
+                setIsProfileModalOpen(false);
+                if (user) fetchUserProfile(user.id);
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
