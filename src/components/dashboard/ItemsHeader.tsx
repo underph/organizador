@@ -19,7 +19,7 @@ const ItemsHeader = ({ itemsCount, onAddItem }: ItemsHeaderProps) => {
       </div>
       <Button 
         onClick={onAddItem}
-        className="bg-secondary hover:bg-secondary/90 text-white w-full sm:w-auto"
+        className="bg-primary hover:bg-primary/90 text-white w-full sm:w-auto"
       >
         <Plus className="w-4 h-4 mr-2" />
         Adicionar Item
