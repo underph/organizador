@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Edit, Trash2, DollarSign, Plus, Minus } from "lucide-react";
+import { Edit, Trash2, DollarSign, Plus, Minus, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import EditItemModal from "./EditItemModal";
@@ -135,8 +135,29 @@ const ItemCard = ({ item, onUpdate, onDelete, onAddEntry, onUpdateQuantity }: It
               </p>
             </div>
             
+            {/* Links de compra */}
+            {item.purchase_links && item.purchase_links.length > 0 && (
+              <div className="space-y-2">
+                <span className="text-sm font-medium text-muted-foreground">Links para Compras:</span>
+                <div className="space-y-1">
+                  {item.purchase_links.map((link, index) => (
+                    <a
+                      key={index}
+                      href={link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-xs text-blue-600 hover:text-blue-800 underline break-all"
+                    >
+                      <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                      {link.length > 40 ? `${link.substring(0, 40)}...` : link}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
+            
             {/* Botão de entrada */}
-            <Button 
+            <Button
               className="w-full bg-green-600 hover:bg-green-700 text-white"
               onClick={() => setIsEntryModalOpen(true)}
             >
