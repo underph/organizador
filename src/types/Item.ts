@@ -7,6 +7,7 @@ export interface Item {
   quantity: number;
   amount_saved: number;
   image_url: string;
+  purchase_links: string[];
   created_at: string;
   updated_at: string;
 }

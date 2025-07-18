@@ -20,7 +20,8 @@ const EditItemModal = ({ isOpen, onClose, onUpdate, item }: EditItemModalProps) 
     name: "",
     description: "",
     price: 0,
-    image_url: ""
+    image_url: "",
+    purchase_links: [""]
   });
 
   useEffect(() => {
@@ -29,16 +30,22 @@ const EditItemModal = ({ isOpen, onClose, onUpdate, item }: EditItemModalProps) 
         name: item.name,
         description: item.description || "",
         price: item.price,
-        image_url: item.image_url || ""
+        image_url: item.image_url || "",
+        purchase_links: item.purchase_links && item.purchase_links.length > 0 ? item.purchase_links : [""]
       });
     }
   }, [item]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // Filter out empty links before submitting
+    const filteredData = {
+      ...formData,
+      purchase_links: formData.purchase_links.filter(link => link.trim() !== "")
+    };
     onUpdate({
       ...item,
-      ...formData
+      ...filteredData
     });
     onClose();
   };
@@ -94,6 +101,51 @@ const EditItemModal = ({ isOpen, onClose, onUpdate, item }: EditItemModalProps) 
             onImageUploaded={handleImageUploaded} 
             currentImageUrl={formData.image_url}
           />
+
+          <div>
+            <Label>Links para Compras/Comparação (opcional)</Label>
+            {formData.purchase_links.map((link, index) => (
+              <div key={index} className="flex gap-2 mt-2">
+                <Input
+                  value={link}
+                  onChange={(e) => {
+                    const newLinks = [...formData.purchase_links];
+                    newLinks[index] = e.target.value;
+                    setFormData(prev => ({ ...prev, purchase_links: newLinks }));
+                  }}
+                  placeholder="https://exemplo.com/produto"
+                  className="flex-1"
+                />
+                {formData.purchase_links.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const newLinks = formData.purchase_links.filter((_, i) => i !== index);
+                      setFormData(prev => ({ ...prev, purchase_links: newLinks }));
+                    }}
+                  >
+                    ✕
+                  </Button>
+                )}
+              </div>
+            ))}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setFormData(prev => ({ 
+                  ...prev, 
+                  purchase_links: [...prev.purchase_links, ""] 
+                }));
+              }}
+              className="mt-2"
+            >
+              + Adicionar Link
+            </Button>
+          </div>
           
           <div className="flex gap-2 pt-4">
             <Button type="button" variant="outline" onClick={onClose} className="flex-1">

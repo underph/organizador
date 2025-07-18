@@ -18,13 +18,14 @@ export const useItems = (user: User | null) => {
 
       if (error) throw error;
       
-      // Garantir que todos os itens tenham a propriedade quantity
-      const itemsWithQuantity = (data || []).map(item => ({
+      // Garantir que todos os itens tenham propriedades obrigatórias
+      const itemsWithDefaults = (data || []).map(item => ({
         ...item,
-        quantity: item.quantity || 1
+        quantity: item.quantity || 1,
+        purchase_links: item.purchase_links || []
       }));
       
-      setItems(itemsWithQuantity);
+      setItems(itemsWithDefaults);
     } catch (error) {
       console.error('Erro ao buscar itens:', error);
     }
@@ -45,8 +46,12 @@ export const useItems = (user: User | null) => {
 
       if (error) throw error;
 
-      const itemWithQuantity = { ...data, quantity: data.quantity || 1 };
-      setItems(prev => [itemWithQuantity, ...prev]);
+      const itemWithDefaults = { 
+        ...data, 
+        quantity: data.quantity || 1,
+        purchase_links: data.purchase_links || []
+      };
+      setItems(prev => [itemWithDefaults, ...prev]);
       
       toast({
         title: "Item adicionado!",
@@ -71,7 +76,8 @@ export const useItems = (user: User | null) => {
           price: updatedItem.price,
           quantity: updatedItem.quantity,
           amount_saved: updatedItem.amount_saved,
-          image_url: updatedItem.image_url
+          image_url: updatedItem.image_url,
+          purchase_links: updatedItem.purchase_links
         })
         .eq('id', updatedItem.id);
 

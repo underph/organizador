@@ -112,6 +112,7 @@ export type Database = {
           image_url: string | null
           name: string
           price: number
+          purchase_links: string[] | null
           quantity: number | null
           updated_at: string
           user_id: string | null
@@ -124,6 +125,7 @@ export type Database = {
           image_url?: string | null
           name: string
           price?: number
+          purchase_links?: string[] | null
           quantity?: number | null
           updated_at?: string
           user_id?: string | null
@@ -136,6 +138,7 @@ export type Database = {
           image_url?: string | null
           name?: string
           price?: number
+          purchase_links?: string[] | null
           quantity?: number | null
           updated_at?: string
           user_id?: string | null
